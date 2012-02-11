@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<executable>
+  <category>BRAINS.Utilities</category>
+  <title>BRAINSImageEval</title>
+  <description>
+This program is used to rate the quality of MRI images
+  </description>
+  <version>0.1.0.$Revision: 1.4 $(alpha)</version>
+  <documentation-url></documentation-url>
+  <license>NEED TO ADD</license>
+  <contributor>This tool was developed by Kent Williams</contributor>
+  <parameters>
+    <image>
+      <name>T1Image</name>
+      <longflag>T1Image</longflag>
+      <description>T1 Image</description>
+      <label>T1 Image</label>
+      <default></default>
+      <channel>input</channel>
+    </image>
+    <image>
+      <name>T2Image</name>
+      <longflag>T2Image</longflag>
+      <description>T2 Image</description>
+      <label>T2 Image</label>
+      <default></default>
+      <channel>input</channel>
+    </image>
+    <image>
+      <name>PDImage</name>
+      <longflag>PDImage</longflag>
+      <description>PD Image</description>
+      <label>PD Image</label>
+      <default></default>
+      <channel>input</channel>
+    </image>
+    <file>
+      <name>TemplateXML</name>
+      <longflag>TemplateXML</longflag>
+      <description>Template XML file</description>
+      <default></default>
+      <label>Template XML file</label>
+      <channel>input</channel>
+    </file>
+    <file>
+      <name>T1TemplateXML</name>
+      <longflag>T1TemplateXML</longflag>
+      <description>T1Template XML file</description>
+      <default></default>
+      <label>T1 Template XML file</label>
+      <channel>input</channel>
+    </file>
+    <file>
+      <name>T2TemplateXML</name>
+      <longflag>T2TemplateXML</longflag>
+      <description>T2Template XML file</description>
+      <default></default>
+      <label>T2 Template XML file</label>
+      <channel>input</channel>
+    </file>
+    <file>
+      <name>PDTemplateXML</name>
+      <longflag>PDTemplateXML</longflag>
+      <description>PDTemplate XML file</description>
+      <default></default>
+      <label>PD Template XML file</label>
+      <channel>input</channel>
+    </file>
+    <file>
+      <name>EvaluationFile</name>
+      <longflag>EvaluationFile</longflag>
+      <description>Evaluation file</description>
+      <default></default>
+      <label>XML evaluation output file</label>
+      <channel>output</channel>
+    </file>
+    <file>
+      <name>T1EvaluationFile</name>
+      <longflag>T1EvaluationFile</longflag>
+      <description>T1Evaluation file</description>
+      <default></default>
+      <label>T1 XML evaluation output file</label>
+      <channel>output</channel>
+    </file>
+    <file>
+      <name>T2EvaluationFile</name>
+      <longflag>T2EvaluationFile</longflag>
+      <description>T2Evaluation file</description>
+      <default></default>
+      <label>T2 XML evaluation output file</label>
+      <channel>output</channel>
+    </file>
+    <file>
+      <name>PDEvaluationFile</name>
+      <longflag>PDEvaluationFile</longflag>
+      <description>PDEvaluation file</description>
+      <default></default>
+      <label>PD XML evaluation output file</label>
+      <channel>output</channel>
+    </file>
+    <string>
+      <name>Evaluator</name>
+      <longflag>Evaluator</longflag>
+      <description>Name of Evaluator</description>
+      <default></default>
+      <label>Evaluator</label>
+    </string>
+  </parameters>
+</executable>
+
