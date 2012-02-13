@@ -1111,6 +1111,13 @@ ResetImageEvaluators()
     //
     // find the image file based on the ImageTYpe
     std::string entireType = curSession->GetType();
+    // PDT2-<num> image types are a bizarre case
+    // where the original is interleaved. Hans said
+    // just evaluate the T2.
+    if(entireType.find("PDT2") == 0)
+        {
+        entireType = entireType.substr(2);
+        }
     std::string imageType = entireType.substr(0,2);
 
     ImageModality imageTypeIndex = ModalityNum;
@@ -1284,6 +1291,7 @@ Init()
   std::string projectXML;
   if(this->GetFromURL(projectReq,projectXML))
     {
+#define     DEBUG_PROJECT_XML
 #if defined(DEBUG_PROJECT_XML)
     std::ofstream o("project.xml");
     o << projectXML << std::endl;

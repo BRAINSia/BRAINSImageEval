@@ -105,6 +105,10 @@ SessionListParser
 
     if(!striequal(this->m_Session.GetReviewed(),"Yes"))
       {
+      // if(striequal(this->m_Session.GetReviewed(),"no"))
+      //   {
+      //   std::cerr << this->m_Session.Value() << std::endl;
+      //   }
       sessionSet->AddSession(this->m_Session);
       }
     }
