@@ -115,6 +115,9 @@ private:
   void StringReplace(std::string &result,
                      const std::string& replaceWhat,
                      const std::string& replaceWithWhat);
+  bool CheckFile(const XNATSession *curSession,
+                 ImageModality &imageTypeIndex,
+                 std::string &fileName);
   ImageModality                   m_CurrentModality;
   bool                            m_T2ImageLoaded;
   bool                            m_PDImageLoaded;

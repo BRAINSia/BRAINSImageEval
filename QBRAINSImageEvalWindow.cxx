@@ -998,6 +998,83 @@ ToggleReviewedURL(const std::string &project,
   return toggleReviewed;
 }
 
+bool
+QBRAINSImageEvalWindow::
+CheckFile(const XNATSession *curSession,
+          ImageModality &imageTypeIndex, 
+          std::string &returnFilename)
+{
+  const char *scanTypes[] = { "T1", "T2", "PD" };
+  std::string prefix = "/paulsen/MRx/";
+  std::string project = curSession->GetProject();
+  prefix += toupper(project[0]);
+  prefix += project.substr(1);
+  prefix += '/';
+  prefix += curSession->GetSubject();
+  prefix += '/';
+  prefix += curSession->GetSession();
+  prefix += "/ANONRAW/";
+  //
+  // find the image file based on the ImageTYpe
+  std::string entireType = curSession->GetType();
+  // PDT2-<num> image types are a bizarre case
+  // where the original is interleaved. Hans said
+  // just evaluate the T2.
+  if(entireType.find("PDT2") == 0)
+    {
+    entireType = entireType.substr(2);
+    }
+  std::string imageType = entireType.substr(0,2);
+
+  if(imageType == "PD")
+    {
+    imageTypeIndex = PD;
+    }
+  else if(imageType == "T1")
+    {
+    imageTypeIndex = T1;
+    }
+  else if(imageType == "T2")
+    {
+    imageTypeIndex = T2;
+    }
+  std::string filename(prefix);
+  filename += curSession->GetSubject();
+  filename += '_';
+  filename += curSession->GetSession();
+  filename += '_';
+  filename += scanTypes[imageTypeIndex];
+  filename += '-';
+  //
+  // the field strength is part of the type, & is part
+  // of the file name e.g. type == T1-15, T1-30, etc
+  std::string candidateName(filename);
+  size_t dashIndex = entireType.find('-',2);
+  if(dashIndex == std::string::npos)
+    {
+    // no dash in image type, malformed type, try another
+    // scan session
+    std::cerr << "Bogus file type " << entireType
+              << std::endl
+              << curSession->Value()
+              << std::endl;
+    return false;
+    }
+  ++dashIndex;
+  candidateName += entireType.substr(dashIndex);
+  candidateName += '_';
+  candidateName += curSession->GetSeriesNumber();
+  candidateName += ".nii.gz";
+  if(!itksys::SystemTools::FileExists(candidateName.c_str()))
+    {
+    std::cerr << "File " << candidateName 
+              << " doesn't exist or is inaccessible" << std::endl;
+    return false;
+    }
+  returnFilename = candidateName;
+  return true;
+}
+
 void
 QBRAINSImageEvalWindow::
 ResetImageEvaluators()
@@ -1035,6 +1112,8 @@ ResetImageEvaluators()
   this->m_ImageFilename[1] = "";
   this->m_ImageFilename[2] = "";
 
+  bool justCheckImageFiles(false);
+
   if(this->m_Argc > 1)
     {
     std::string arg1(this->m_Argv[1]);
@@ -1043,9 +1122,23 @@ ResetImageEvaluators()
       this->RePostEvaluations();
       }
     //
+    // checkFiles means don't start any evaluations, just
+    // check to see if there are any missing image files
+    else if(arg1 == "--checkFiles")
+      {
+      const XNATSession *curSession;
+      while((curSession = this->m_XNATSession.GetRandomUnevaluatedSession()) != 0)
+        {
+        std::string candidateName;
+        ImageModality imageTypeIndex;
+        (void)this->CheckFile(curSession,imageTypeIndex,candidateName);
+        }
+      exit(0);
+      }
+    //
     // if there are one or more scan ids on the command line,
     // create that list.
-    else if(this->m_Argc > 1 && !this->m_CmdLineScanListCreated)
+    else if(!this->m_CmdLineScanListCreated)
       {
       this->m_XNATSession.InitScanList(this->m_Argc,this->m_Argv,this->m_CmdLineScanList);
       this->m_CmdLineScanListCreated = true;
@@ -1061,6 +1154,13 @@ ResetImageEvaluators()
     if(!this->m_CmdLineScanListCreated)
       {
       curSession = this->m_XNATSession.GetRandomUnevaluatedSession();
+      if(curSession == 0)
+        {
+        QMessageBox msgBox;
+        msgBox.setText("No un-reviewed scan sessions found!");
+        msgBox.exec();
+        exit(0);
+        }
       if(!re.find(curSession->GetProject()))
         {
         continue;
@@ -1091,81 +1191,20 @@ ResetImageEvaluators()
       const XNATSession *session = tempSet.GetFirstSession();
       if(session != 0)
         {
-        std::string reviewedFlag = session->GetReviewed();
-        if(reviewedFlag != "" && reviewedFlag != "No" && reviewedFlag != "no")
+        if(session->HasBeenReviewed())
           {
           continue;
           }
         }
       }
-
-    std::string prefix = "/paulsen/MRx/";
-    std::string project = curSession->GetProject();
-    prefix += toupper(project[0]);
-    prefix += project.substr(1);
-    prefix += '/';
-    prefix += curSession->GetSubject();
-    prefix += '/';
-    prefix += curSession->GetSession();
-    prefix += "/ANONRAW/";
-    //
-    // find the image file based on the ImageTYpe
-    std::string entireType = curSession->GetType();
-    // PDT2-<num> image types are a bizarre case
-    // where the original is interleaved. Hans said
-    // just evaluate the T2.
-    if(entireType.find("PDT2") == 0)
-        {
-        entireType = entireType.substr(2);
-        }
-    std::string imageType = entireType.substr(0,2);
-
-    ImageModality imageTypeIndex = ModalityNum;
-    if(imageType == "PD")
+    std::string candidateName;
+    ImageModality imageTypeIndex;
+    if(!this->CheckFile(curSession,imageTypeIndex,candidateName))
       {
-      imageTypeIndex = PD;
-      }
-    else if(imageType == "T1")
-      {
-      imageTypeIndex = T1;
-      }
-    else if(imageType == "T2")
-      {
-      imageTypeIndex = T2;
-      }
-    std::string filename(prefix);
-    filename += curSession->GetSubject();
-    filename += '_';
-    filename += curSession->GetSession();
-    filename += '_';
-    filename += scanTypes[imageTypeIndex];
-    filename += '-';
-    //
-    // the field strength is part of the type, & is part
-    // of the file name e.g. type == T1-15, T1-30, etc
-    std::string candidateName(filename);
-    size_t dashIndex = entireType.find('-',2);
-    if(dashIndex == std::string::npos)
-      {
-      // no dash in image type, malformed type, try another
-      // scan session
       continue;
       }
-    ++dashIndex;
-    candidateName += entireType.substr(dashIndex);
-    candidateName += '_';
-    candidateName += curSession->GetSeriesNumber();
-    candidateName += ".nii.gz";
-    if(itksys::SystemTools::FileExists(candidateName.c_str()))
-      {
-      this->m_ImageFilename[imageTypeIndex] = candidateName;
-      this->m_CurSession = curSession;
-      }
-    else
-      {
-      std::cerr << "File " << candidateName 
-                << " doesn't exist or is inaccessible" << std::endl;
-      }
+    this->m_ImageFilename[imageTypeIndex] = candidateName;
+    this->m_CurSession = curSession;
     }
   while(this->m_ImageFilename[0] == "" &&
         this->m_ImageFilename[1] == "" &&

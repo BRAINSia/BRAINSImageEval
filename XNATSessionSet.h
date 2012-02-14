@@ -86,6 +86,7 @@ public:
       this->m_ActivationDate.clear();
       this->m_LastModified.clear();
     }
+  bool HasBeenReviewed() const;
 private:
   std::string m_Project;
   std::string m_SubjectId;

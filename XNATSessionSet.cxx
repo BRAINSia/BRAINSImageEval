@@ -103,12 +103,8 @@ SessionListParser
     {
     XNATSessionSet *sessionSet = static_cast<XNATSessionSet *>(userData);
 
-    if(!striequal(this->m_Session.GetReviewed(),"Yes"))
+    if(!this->m_Session.HasBeenReviewed())
       {
-      // if(striequal(this->m_Session.GetReviewed(),"no"))
-      //   {
-      //   std::cerr << this->m_Session.Value() << std::endl;
-      //   }
       sessionSet->AddSession(this->m_Session);
       }
     }
@@ -192,6 +188,14 @@ SessionListParser
       this->m_Session.SetLastModified(charData);
       break;
     }
+}
+
+bool
+XNATSession::
+HasBeenReviewed() const
+{
+  std::string reviewed = this->GetReviewed();
+  return striequal(this->GetReviewed(),"Yes");
 }
 
 const std::string
@@ -348,18 +352,12 @@ XNATSessionSet
     int i = this->m_Indices[this->m_Index];
     ++this->m_Index;
     XNATSession *rval = &(this->m_XNATSession[i]);
-    if(rval->GetReviewed() == "")
+    if(!rval->HasBeenReviewed())
       {
       return rval;
       }
     }
-
-  QMessageBox msgBox;
-  msgBox.setText("No un-reviewed scan sessions found!");
-  msgBox.exec();
-  exit(1);
-  // never happen but keep compiler happy
-  return &(this->m_XNATSession[0]);
+  return 0;
 }
 
 void
