@@ -1168,8 +1168,8 @@ ResetImageEvaluators()
         {
         continue;
         }
-      }
 #endif
+      }
     else
       {
       if(this->m_CmdLineScanList.empty())
