@@ -1146,7 +1146,9 @@ ResetImageEvaluators()
     }
   // /paulsen/MRx/PROJECT/SUBJECTID/SCANID/ANONRAW/*.nii.gz
   // T1s and T2s look like: SUBJECTID_SCANID_[T1|T2]-[15|30]_SERIESNUMBER.nii.gz
+#if 0
   itksys::RegularExpression re("(PHD_)|(FMRI_HD).*");
+#endif
   do
     {
     const XNATSession *curSession;
@@ -1161,11 +1163,13 @@ ResetImageEvaluators()
         msgBox.exec();
         exit(0);
         }
+#if 0
       if(!re.find(curSession->GetProject()))
         {
         continue;
         }
       }
+#endif
     else
       {
       if(this->m_CmdLineScanList.empty())
