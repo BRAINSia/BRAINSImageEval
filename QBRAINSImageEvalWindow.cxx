@@ -281,7 +281,9 @@ QBRAINSImageEvalWindow
   m_postEvaluationAction(0),
   m_Argc(0),
   m_Argv(0),
-  m_CmdLineScanListCreated(false)
+  m_CmdLineScanListCreated(false),
+  m_ForceEval(false),
+  m_CmdLineProcessed(false)
 {
 
   for(unsigned i = 0; i < ModalityNum; i++)
@@ -1112,34 +1114,44 @@ ResetImageEvaluators()
   this->m_ImageFilename[1] = "";
   this->m_ImageFilename[2] = "";
 
-  bool justCheckImageFiles(false);
-
-  if(this->m_Argc > 1)
+  if(!this->m_CmdLineProcessed)
     {
-    std::string arg1(this->m_Argv[1]);
-    if(arg1 == "--repost" && this->m_Argc > 2)
+    this->m_CmdLineProcessed = true;
+    if(this->m_Argc > 1)
       {
-      this->RePostEvaluations();
-      }
-    //
-    // checkFiles means don't start any evaluations, just
-    // check to see if there are any missing image files
-    else if(arg1 == "--checkFiles")
-      {
-      const XNATSession *curSession;
-      while((curSession = this->m_XNATSession.GetRandomUnevaluatedSession()) != 0)
+      // --repost & --checkFiles are batch options
+      std::string arg1(this->m_Argv[1]);
+      if(arg1 == "--repost" && this->m_Argc > 2)
         {
-        std::string candidateName;
-        ImageModality imageTypeIndex;
-        (void)this->CheckFile(curSession,imageTypeIndex,candidateName);
+        this->RePostEvaluations();
         }
-      exit(0);
+      //
+      // checkFiles means don't start any evaluations, just
+      // check to see if there are any missing image files
+      else if(arg1 == "--checkFiles")
+        {
+        const XNATSession *curSession;
+        while((curSession = this->m_XNATSession.GetRandomUnevaluatedSession()) != 0)
+          {
+          std::string candidateName;
+          ImageModality imageTypeIndex;
+          (void)this->CheckFile(curSession,imageTypeIndex,candidateName);
+          }
+        exit(0);
+        }
+      // force re-evaluation (if necessary of all command line scan ids)
+      else if(arg1 == "--force" || arg1 == "-f")
+        {
+        this->m_ForceEval = true;
+        --this->m_Argc;
+        ++this->m_Argv;
+        }
       }
-    //
-    // if there are one or more scan ids on the command line,
-    // create that list.
-    else if(!this->m_CmdLineScanListCreated)
+    if(this->m_Argc > 1 && !this->m_CmdLineScanListCreated)
       {
+      //
+      // if there are one or more scan ids on the command line,
+      // create that list.
       this->m_XNATSession.InitScanList(this->m_Argc,this->m_Argv,this->m_CmdLineScanList);
       this->m_CmdLineScanListCreated = true;
       }
@@ -1151,6 +1163,7 @@ ResetImageEvaluators()
 #endif
   do
     {
+    bool CheckReviewedFlag(true);
     const XNATSession *curSession;
     // if no command line list was given, choose at random;
     if(!this->m_CmdLineScanListCreated)
@@ -1181,23 +1194,27 @@ ResetImageEvaluators()
         }
       curSession = this->m_CmdLineScanList.front();
       this->m_CmdLineScanList.pop_front();
+      CheckReviewedFlag = false;
       }
-    std::string testReviewed =
-      "https://predict-hd.net/xnat/REST/custom/scans?format=xml&sql=session_id='";
-    testReviewed += curSession->GetSessionId(); //     testReviewed += "PREDICTHD_E02709";
-    testReviewed += "' and seriesnumber='";
-    testReviewed += curSession->GetSeriesNumber(); //    testReviewed += "4";
-    testReviewed += "'";
-    std::string reviewed;
-    if(this->GetFromURL(testReviewed,reviewed))
+    if(CheckReviewedFlag)
       {
-      XNATSessionSet tempSet(reviewed);
-      const XNATSession *session = tempSet.GetFirstSession();
-      if(session != 0)
+      std::string testReviewed =
+        "https://predict-hd.net/xnat/REST/custom/scans?format=xml&sql=session_id='";
+      testReviewed += curSession->GetSessionId(); //     testReviewed += "PREDICTHD_E02709";
+      testReviewed += "' and seriesnumber='";
+      testReviewed += curSession->GetSeriesNumber(); //    testReviewed += "4";
+      testReviewed += "'";
+      std::string reviewed;
+      if(this->GetFromURL(testReviewed,reviewed))
         {
-        if(session->HasBeenReviewed())
+        XNATSessionSet tempSet(reviewed);
+        const XNATSession *session = tempSet.GetFirstSession();
+        if(session != 0)
           {
-          continue;
+          if(session->HasBeenReviewed())
+            {
+            continue;
+            }
           }
         }
       }

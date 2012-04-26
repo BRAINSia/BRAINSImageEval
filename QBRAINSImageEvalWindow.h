@@ -154,6 +154,8 @@ private:
   char **                         m_Argv;
   bool                            m_CmdLineScanListCreated;
   std::list<const XNATSession *>  m_CmdLineScanList;
+  bool                            m_ForceEval;
+  bool                            m_CmdLineProcessed;
 };
 
 #endif // QBRAINSImageEvalWindow_h
