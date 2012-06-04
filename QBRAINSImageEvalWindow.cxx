@@ -286,6 +286,7 @@ QBRAINSImageEvalWindow
   m_CmdLineProcessed(false)
 {
   this->m_HostURL = "https://www.predict-hd.net";
+  this->m_FilePrefix = "/paulsen/MRx";
   for(unsigned i = 0; i < ModalityNum; i++)
     {
     this->m_Survey[i] = 0;
@@ -1006,7 +1007,8 @@ CheckFile(const XNATSession *curSession,
           std::string &returnFilename)
 {
   const char *scanTypes[] = { "T1", "T2", "PD" };
-  std::string prefix = "/paulsen/MRx/";
+  std::string prefix = this->m_FilePrefix;
+  prefix += '/';
   std::string project = curSession->GetProject();
   prefix += toupper(project[0]);
   prefix += project.substr(1);
@@ -1113,72 +1115,6 @@ ResetImageEvaluators()
   this->m_ImageFilename[1] = "";
   this->m_ImageFilename[2] = "";
 
-  if(!this->m_CmdLineProcessed)
-    {
-    this->m_CmdLineProcessed = true;
-    while(this->m_Argc > 1)
-      {
-      // look at command line arguments until
-      // the dash-args are all consumed
-      if(this->m_Argv[0][0] != '-')
-        {
-        break;
-        }
-      // --repost & --checkFiles are batch options
-      std::string arg1(this->m_Argv[1]);
-      if(arg1 == "--repost" && this->m_Argc > 2)
-        {
-        this->RePostEvaluations();
-        exit(0);
-        }
-      else if(arg1 == "--checkFiles")
-        //
-        // checkFiles means don't start any evaluations, just
-        // check to see if there are any missing image files
-        {
-        const XNATSession *curSession;
-        while((curSession = this->m_XNATSession.GetRandomUnevaluatedSession()) != 0)
-          {
-          std::string candidateName;
-          ImageModality imageTypeIndex;
-          (void)this->CheckFile(curSession,imageTypeIndex,candidateName);
-          }
-        exit(0);
-        }
-      else if(arg1 == "--force" || arg1 == "-f")
-        {
-        // force re-evaluation (if necessary of all command line scan ids)
-        this->m_ForceEval = true;
-        }
-      else if(arg1 == "--url")
-        {
-        --this->m_Argc;
-        ++this->m_Argv;
-        if(this->m_Argc == 0)
-          {
-          std::cerr << "--url given without URL argument" << std::endl;
-          }
-        this->m_HostURL = *(this->m_Argv);
-        }
-      else
-        {
-        std::cerr << "Unrecognized command line argument "
-                  << arg1 << std::endl;
-        exit(0);
-        }
-        --this->m_Argc;
-        ++this->m_Argv;
-      }
-
-    if(this->m_Argc > 1 && !this->m_CmdLineScanListCreated)
-      {
-      //
-      // if there are one or more scan ids on the command line,
-      // create that list.
-      this->m_XNATSession.InitScanList(this->m_Argc,this->m_Argv,this->m_CmdLineScanList);
-      this->m_CmdLineScanListCreated = true;
-      }
-    }
   // /paulsen/MRx/PROJECT/SUBJECTID/SCANID/ANONRAW/*.nii.gz
   // T1s and T2s look like: SUBJECTID_SCANID_[T1|T2]-[15|30]_SERIESNUMBER.nii.gz
 #if 0
@@ -1325,6 +1261,80 @@ QBRAINSImageEvalWindow::
 Init()
 
 {
+  if(!this->m_CmdLineProcessed)
+    {
+    this->m_CmdLineProcessed = true;
+    while(this->m_Argc > 1)
+      {
+      // look at command line arguments until
+      // the dash-args are all consumed
+      if(this->m_Argv[1][0] != '-')
+        {
+        break;
+        }
+      // --repost & --checkFiles are batch options
+      std::string arg1(this->m_Argv[1]);
+      --this->m_Argc;
+      ++this->m_Argv;
+
+      if(arg1 == "--repost" && this->m_Argc > 2)
+        {
+        this->RePostEvaluations();
+        exit(0);
+        }
+      else if(arg1 == "--checkFiles")
+        //
+        // checkFiles means don't start any evaluations, just
+        // check to see if there are any missing image files
+        {
+        const XNATSession *curSession;
+        while((curSession = this->m_XNATSession.GetRandomUnevaluatedSession()) != 0)
+          {
+          std::string candidateName;
+          ImageModality imageTypeIndex;
+          (void)this->CheckFile(curSession,imageTypeIndex,candidateName);
+          }
+        exit(0);
+        }
+      else if(arg1 == "--force" || arg1 == "-f")
+        {
+        // force re-evaluation (if necessary of all command line scan ids)
+        this->m_ForceEval = true;
+        }
+      else if(arg1 == "--url")
+        {
+        if(this->m_Argc == 0)
+          {
+          std::cerr << "--url given without URL argument" << std::endl;
+          }
+        this->m_HostURL = this->m_Argv[1];
+        --this->m_Argc;
+        ++this->m_Argv;
+        }
+      else if(arg1 == "--fileprefix")
+        {
+        this->m_FilePrefix = this->m_Argv[1];
+        --this->m_Argc;
+        ++this->m_Argv;
+        }
+      else
+        {
+        std::cerr << "Unrecognized command line argument "
+                  << arg1 << std::endl;
+        exit(0);
+        }
+      }
+
+    if(this->m_Argc > 1 && !this->m_CmdLineScanListCreated)
+      {
+      //
+      // if there are one or more scan ids on the command line,
+      // create that list.
+      this->m_XNATSession.InitScanList(this->m_Argc,this->m_Argv,this->m_CmdLineScanList);
+      this->m_CmdLineScanListCreated = true;
+      }
+    }
+
   bool loggedIn(false);
   QLoginDialog loginDialog(this);
   loginDialog.SetUserName(this->m_Evaluator);

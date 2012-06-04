@@ -122,6 +122,7 @@ private:
   bool                            m_T2ImageLoaded;
   bool                            m_PDImageLoaded;
   std::string                     m_HostURL;
+  std::string                     m_FilePrefix;
   std::string                     m_Evaluator;
   std::string                     m_Password;
   std::string                     m_ImageFilename[ModalityNum];
