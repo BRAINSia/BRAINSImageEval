@@ -30,6 +30,15 @@ QLoginDialog
   QString pW(pw.c_str());
   this->password->setText(pW);
 }
+void
+QLoginDialog
+::SetURL(const std::string &url)
+{
+  std::string label = "Log in to ";
+  label += url;
+  QString dlgLabel(label.c_str());
+  this->DialogLabel->setText(dlgLabel);
+}
 
 void
 QLoginDialog

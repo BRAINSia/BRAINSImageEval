@@ -285,7 +285,7 @@ QBRAINSImageEvalWindow
   m_ForceEval(false),
   m_CmdLineProcessed(false)
 {
-
+  this->m_HostURL = "https://www.predict-hd.net";
   for(unsigned i = 0; i < ModalityNum; i++)
     {
     this->m_Survey[i] = 0;
@@ -889,7 +889,7 @@ MakePostEvaluationURL(const std::string &project,
                           const std::string &sessionID,
                           const std::string &assessor)
 {
-    std::string url("https://www.predict-hd.net/xnat/REST/projects/");
+    std::string url = this->m_HostURL + "/xnat/REST/projects/";
     url += project;
     url += "/subjects/";
     url += subjectID;
@@ -978,7 +978,6 @@ RePostEvaluations()
     std::cerr << " done" << std::endl;
     }
   std::cerr << "All reposts completed successfully" << std::cerr;
-  exit(0);
 }
 
 std::string
@@ -988,7 +987,7 @@ ToggleReviewedURL(const std::string &project,
                   const std::string &session,
                   const std::string &seriesNumber)
 {
-  std::string toggleReviewed = "https://predict-hd.net/xnat/REST/projects/";
+  std::string toggleReviewed = this->m_HostURL + "/xnat/REST/projects/";
   toggleReviewed += this->m_CurSession->GetProject();
   toggleReviewed += "/subjects/";
   toggleReviewed += this->m_CurSession->GetSubject();
@@ -1117,18 +1116,25 @@ ResetImageEvaluators()
   if(!this->m_CmdLineProcessed)
     {
     this->m_CmdLineProcessed = true;
-    if(this->m_Argc > 1)
+    while(this->m_Argc > 1)
       {
+      // look at command line arguments until
+      // the dash-args are all consumed
+      if(this->m_Argv[0][0] != '-')
+        {
+        break;
+        }
       // --repost & --checkFiles are batch options
       std::string arg1(this->m_Argv[1]);
       if(arg1 == "--repost" && this->m_Argc > 2)
         {
         this->RePostEvaluations();
+        exit(0);
         }
-      //
-      // checkFiles means don't start any evaluations, just
-      // check to see if there are any missing image files
       else if(arg1 == "--checkFiles")
+        //
+        // checkFiles means don't start any evaluations, just
+        // check to see if there are any missing image files
         {
         const XNATSession *curSession;
         while((curSession = this->m_XNATSession.GetRandomUnevaluatedSession()) != 0)
@@ -1139,14 +1145,31 @@ ResetImageEvaluators()
           }
         exit(0);
         }
-      // force re-evaluation (if necessary of all command line scan ids)
       else if(arg1 == "--force" || arg1 == "-f")
         {
+        // force re-evaluation (if necessary of all command line scan ids)
         this->m_ForceEval = true;
+        }
+      else if(arg1 == "--url")
+        {
         --this->m_Argc;
         ++this->m_Argv;
+        if(this->m_Argc == 0)
+          {
+          std::cerr << "--url given without URL argument" << std::endl;
+          }
+        this->m_HostURL = *(this->m_Argv);
         }
+      else
+        {
+        std::cerr << "Unrecognized command line argument "
+                  << arg1 << std::endl;
+        exit(0);
+        }
+        --this->m_Argc;
+        ++this->m_Argv;
       }
+
     if(this->m_Argc > 1 && !this->m_CmdLineScanListCreated)
       {
       //
@@ -1198,8 +1221,9 @@ ResetImageEvaluators()
       }
     if(CheckReviewedFlag)
       {
-      std::string testReviewed =
-        "https://predict-hd.net/xnat/REST/custom/scans?format=xml&sql=session_id='";
+
+      std::string testReviewed = this->m_HostURL +
+        "/xnat/REST/custom/scans?format=xml&sql=session_id='";
       testReviewed += curSession->GetSessionId(); //     testReviewed += "PREDICTHD_E02709";
       testReviewed += "' and seriesnumber='";
       testReviewed += curSession->GetSeriesNumber(); //    testReviewed += "4";
@@ -1305,7 +1329,7 @@ Init()
   QLoginDialog loginDialog(this);
   loginDialog.SetUserName(this->m_Evaluator);
   loginDialog.SetPassword(this->m_Password);
-
+  loginDialog.SetURL(this->m_HostURL);
   do
     {
     int execReturn = loginDialog.exec();
@@ -1317,27 +1341,17 @@ Init()
         break;
       case QDialog::Rejected:
         QCoreApplication::exit(1);
+        exit(0);
         break;
       }
     if(this->m_Evaluator != "" && this->m_Password != "")
       {
-      std::string login("https://www.predict-hd.net/xnat/REST/JSESSION");
+      std::string login = this->m_HostURL + "/xnat/REST/JSESSION";
       std::string sessionID;
       if(this->GetFromURL(login,sessionID))
         {
         loggedIn = true;
         this->m_RESTSessionID = sessionID;
-        // save recorded password.
-        QSettings settings("University of Iowa Department Of Psychiatry",
-                           "BRAINSImageEval");
-        settings.beginGroup("Authentication");
-        settings.setValue("UserName",this->m_Evaluator.c_str());
-
-        QString hashPassword(this->m_Password.c_str());
-        hashPassword = hashPassword.toAscii().toBase64();
-        std::string hashedPassword = hashPassword.toStdString();
-        settings.setValue("Password",hashedPassword.c_str());
-        settings.endGroup();
         }
       else
         {
@@ -1347,7 +1361,8 @@ Init()
     }
   while(!loggedIn);
 
-  std::string projectReq("https://www.predict-hd.net/xnat/REST/custom/scans?type=(T1|T2|PD|PDT2)-(15|30)&format=xml");
+  std::string projectReq = this->m_HostURL +
+    "/xnat/REST/custom/scans?type=(T1|T2|PD|PDT2)-(15|30)&format=xml";
   std::string projectXML;
   if(this->GetFromURL(projectReq,projectXML))
     {
@@ -1362,8 +1377,12 @@ Init()
   else
     {
     QMessageBox msgBox;
-    msgBox.setText("Can't retrieve session list from www.predict-hd.net\n"
-                   "Try again later");
+    std::stringstream ss;
+    ss << "Can't retrieve session list from "
+       << this->m_HostURL
+       << std::endl
+       << "Try again later";
+    msgBox.setText(ss.str().c_str());
     msgBox.exec();
     exit(1);
     }

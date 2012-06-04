@@ -13,6 +13,7 @@ public:
   virtual ~QLoginDialog();
   void SetUserName(const std::string &un);
   void SetPassword(const std::string &pw);
+  void SetURL(const std::string &url);
   const std::string &GetUserName() const { return m_UserName; }
   const std::string &GetPassword() const { return m_Password; }
 public Q_SLOTS:
