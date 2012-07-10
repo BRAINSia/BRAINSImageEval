@@ -103,7 +103,7 @@ SessionListParser
     {
     XNATSessionSet *sessionSet = static_cast<XNATSessionSet *>(userData);
 
-    if(!this->m_Session.HasBeenReviewed())
+    if(sessionSet->GetIgnoreReviewed() || !this->m_Session.HasBeenReviewed())
       {
       sessionSet->AddSession(this->m_Session);
       }
@@ -258,12 +258,13 @@ Value() const
 }
 
 XNATSessionSet
-::XNATSessionSet() : m_Index(0)
+::XNATSessionSet() : m_Index(0), m_IgnoreReviewed(false)
 {
 }
 
 XNATSessionSet
-::XNATSessionSet(const std::string &XMLReportString)
+::XNATSessionSet(const std::string &XMLReportString) : m_Index(0),
+                                                       m_IgnoreReviewed(false)
 {
   this->BuildSet(XMLReportString);
 }

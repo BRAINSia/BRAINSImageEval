@@ -1300,6 +1300,7 @@ Init()
         {
         // force re-evaluation (if necessary of all command line scan ids)
         this->m_ForceEval = true;
+        this->m_XNATSession.SetIgnoreReviewed(true);
         }
       else if(arg1 == "--url")
         {
@@ -1325,14 +1326,6 @@ Init()
         }
       }
 
-    if(this->m_Argc > 1 && !this->m_CmdLineScanListCreated)
-      {
-      //
-      // if there are one or more scan ids on the command line,
-      // create that list.
-      this->m_XNATSession.InitScanList(this->m_Argc,this->m_Argv,this->m_CmdLineScanList);
-      this->m_CmdLineScanListCreated = true;
-      }
     }
 
   bool loggedIn(false);
@@ -1395,6 +1388,14 @@ Init()
     msgBox.setText(ss.str().c_str());
     msgBox.exec();
     exit(1);
+    }
+  if(this->m_Argc > 1 && !this->m_CmdLineScanListCreated)
+    {
+    //
+    // if there are one or more scan ids on the command line,
+    // create that list.
+    this->m_XNATSession.InitScanList(this->m_Argc,this->m_Argv,this->m_CmdLineScanList);
+    this->m_CmdLineScanListCreated = true;
     }
 
   this->ResetImageEvaluators();

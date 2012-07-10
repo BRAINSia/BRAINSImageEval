@@ -118,17 +118,23 @@ public:
   const XNATSession * GetFirstSession();
   void AddSession(const XNATSession &session);
   void InitScanList(int argc, char *argv[],std::list<const XNATSession *> &ScanList);
+  void SetIgnoreReviewed(bool IgnoreReviewed)
+    {
+      this->m_IgnoreReviewed = IgnoreReviewed;
+    }
+  bool GetIgnoreReviewed() { return this->m_IgnoreReviewed; }
 private:
   std::vector<XNATSession> m_XNATSession;
   /** A shuffled vector of indices is used to pick random sessions
-   *  from the set. 
+   *  from the set.
    */
   IndexListType m_Indices;
-  /** m_Index starts at zero whenever a set is built. 
+  /** m_Index starts at zero whenever a set is built.
    *  it increases monotonically until all unevaluated sesssions
    *  have been reviewed.
    */
   unsigned long m_Index;
+  bool        m_IgnoreReviewed;
 };
 
 #endif // XNATSessionSet__h
