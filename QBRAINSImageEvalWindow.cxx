@@ -852,7 +852,7 @@ QBRAINSImageEvalWindow
 
 void
 QBRAINSImageEvalWindow::
-CreateTemplateXML(ImageModality which,const std::string &filename)
+CreateTemplateXML(ImageModality which,const std::string &filename,const XNATSession *curSession)
 {
 // label="rater_eval_sessionid_scanid_seriesnumber"
   const char *templateS =
@@ -1195,13 +1195,13 @@ ResetImageEvaluators()
   if(this->m_ImageFilename[T1] != "")
     {
     this->LoadImage(this->m_ImageFilename[T1], T1);
-    this->CreateTemplateXML(T1,this->m_ImageFilename[T1]);
+    this->CreateTemplateXML(T1,this->m_ImageFilename[T1],this->m_CurSession);
     this->m_CurrentModality = T1;
     }
   else if ( this->m_ImageFilename[T2] != "" )
     {
     this->LoadImage(this->m_ImageFilename[T2], T2);
-    this->CreateTemplateXML(T2,this->m_ImageFilename[T2]);
+    this->CreateTemplateXML(T2,this->m_ImageFilename[T2],this->m_CurSession);
     if(this->m_CurrentModality == ModalityNum)
       {
       this->m_CurrentModality = T2;
@@ -1210,7 +1210,7 @@ ResetImageEvaluators()
   else if ( this->m_ImageFilename[PD] != "" )
     {
     this->LoadImage(this->m_ImageFilename[PD], PD);
-    this->CreateTemplateXML(PD,this->m_ImageFilename[PD]);
+    this->CreateTemplateXML(PD,this->m_ImageFilename[PD],this->m_CurSession);
     if(this->m_CurrentModality == ModalityNum)
       {
       this->m_CurrentModality = PD;
@@ -1287,12 +1287,11 @@ Init()
         // checkFiles means don't start any evaluations, just
         // check to see if there are any missing image files
         {
-        const XNATSession *curSession;
-        while((curSession = this->m_XNATSession.GetRandomUnevaluatedSession()) != 0)
+        while((this->m_CurSession = this->m_XNATSession.GetRandomUnevaluatedSession()) != 0)
           {
           std::string candidateName;
           ImageModality imageTypeIndex;
-          (void)this->CheckFile(curSession,imageTypeIndex,candidateName);
+          (void)this->CheckFile(this->m_CurSession,imageTypeIndex,candidateName);
           }
         exit(0);
         }
@@ -1349,7 +1348,7 @@ Init()
       }
     if(this->m_Evaluator != "" && this->m_Password != "")
       {
-      std::string login = this->m_HostURL + "/xnat/REST/JSESSION";
+      std::string login = this->m_HostURL + "/xnat/data/JSESSION";
       std::string sessionID;
       if(this->GetFromURL(login,sessionID))
         {

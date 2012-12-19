@@ -111,7 +111,7 @@ private:
   bool DeleteURL(const std::string &url, std::string &response,bool showErrorMessageBox = true);
   void AddKeyCommand(const char *name,QKeySequence &sequence);
   void NetworkError();
-  void CreateTemplateXML(ImageModality,const std::string &filename);
+  void CreateTemplateXML(ImageModality,const std::string &filename,const XNATSession *curSession = 0);
   void StringReplace(std::string &result,
                      const std::string& replaceWhat,
                      const std::string& replaceWithWhat);
