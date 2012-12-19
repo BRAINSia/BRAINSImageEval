@@ -700,6 +700,7 @@ QBRAINSImageEvalWindow
   credentials += this->m_Password.c_str();
   credentials = "Basic " + credentials.toAscii().toBase64();
   request.setRawHeader(QByteArray("Authorization"),credentials.toAscii());
+  request.setRawHeader( "User-Agent" , "Qt" );
   QNetworkReply *reply;
   QByteArray qba;
   switch(messageType)
@@ -1618,6 +1619,18 @@ XMLFetch(QNetworkReply *reply)
 {
   if(reply->error() != QNetworkReply::NoError)
     {
+    QList<QNetworkReply::RawHeaderPair> rawList = reply->rawHeaderPairs();
+    std::cerr << "Reply header" << std::endl;
+    std::cerr << "  Error: [" << reply->errorString().toStdString()
+              << "]" << std::endl;
+    for(QList<QNetworkReply::RawHeaderPair>::const_iterator it = rawList.begin();
+        it != rawList.end(); ++it)
+      {
+      std::cerr << "  "
+                << it->first.constData() << " ["
+                << it->second.constData()
+                << "]" << std::endl;
+      }
     return;
     }
   QByteArray xmlString = reply->readAll();
