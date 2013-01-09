@@ -283,7 +283,8 @@ QBRAINSImageEvalWindow
   m_Argv(0),
   m_CmdLineScanListCreated(false),
   m_ForceEval(false),
-  m_CmdLineProcessed(false)
+  m_CmdLineProcessed(false),
+  m_ShowNetworkErrors(false)
 {
   this->m_HostURL = "https://www.predict-hd.net";
   this->m_FilePrefix = "/paulsen/MRx";
@@ -718,11 +719,17 @@ QBRAINSImageEvalWindow
       // no need just yet.
       break;
     }
-  if(showErrorMessageBox)
-    {
-    connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),
-            this,SLOT(NetworkError(QNetworkReply::NetworkError)));
-    }
+  //
+  // We always have to handle the NetworkError signal, but
+  // we may not care that the error occured.  So we always
+  // catch the error, but if we don't care about the error,
+  // suppress popping the message box.
+  // If you don't install a handler for Network error, it will
+  // dump a message in the command line console, which is
+  // unacceptable.
+  this->m_ShowNetworkErrors = showErrorMessageBox;
+  connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),
+          this,SLOT(NetworkError(QNetworkReply::NetworkError)));
   eventLoop.exec();
   response = this->m_HTTPResponse;
   if(this->m_NetworkErrorCode == QNetworkReply::NoError)
@@ -759,6 +766,11 @@ void
 QBRAINSImageEvalWindow
 ::NetworkError()
 {
+  // if an error is OK, don't pop the message box.
+  if(!this->m_ShowNetworkErrors)
+    {
+    return;
+    }
   QMessageBox msgBox;
   switch(this->m_NetworkErrorCode)
     {

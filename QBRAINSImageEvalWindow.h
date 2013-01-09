@@ -158,6 +158,7 @@ private:
   std::list<const XNATSession *>  m_CmdLineScanList;
   bool                            m_ForceEval;
   bool                            m_CmdLineProcessed;
+  bool                            m_ShowNetworkErrors;
 };
 
 #endif // QBRAINSImageEvalWindow_h
