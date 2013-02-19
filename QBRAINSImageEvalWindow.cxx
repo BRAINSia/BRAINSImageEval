@@ -1645,11 +1645,12 @@ QBRAINSImageEvalWindow::
 sslErrorHandler(QNetworkReply *qnr, const QList<QSslError> &errList)
 {
 
+#if 0
   qDebug() << "---frmBuyIt::sslErrorHandler: ";
   // show list of all ssl errors
   foreach (QSslError err, errList)
     qDebug() << "ssl error: " << err;
- 
+#endif
   qnr->ignoreSslErrors();
 
 }
