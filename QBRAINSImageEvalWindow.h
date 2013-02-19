@@ -28,6 +28,7 @@ public slots:
   void exitSlot();
   void postEvaluation();
   void XMLFetch(QNetworkReply *reply);
+  void sslErrorHandler(QNetworkReply *, const QList<QSslError> &);
   void NetworkError(QNetworkReply::NetworkError error);
   void aboutToQuit();
   void showEvaluations();

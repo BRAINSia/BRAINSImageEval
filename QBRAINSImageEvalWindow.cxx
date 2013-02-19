@@ -15,7 +15,8 @@
 #include <QLabel>
 #include <QCheckBox>
 #include <QTextEdit>
-
+#include <QDebug>
+#include <QSslError>
 #include <QRegExp>
 #include <QLineEdit>
 #include <QMenuBar>
@@ -683,6 +684,9 @@ QBRAINSImageEvalWindow
   QNetworkAccessManager nam;
   connect(&nam,SIGNAL(finished(QNetworkReply *)),
           this,SLOT(XMLFetch(QNetworkReply *)));
+
+  connect(&nam,SIGNAL(sslErrors(QNetworkReply *, const QList<QSslError> &)),
+          this,SLOT(sslErrorHandler(QNetworkReply *, const QList<QSslError> &)));
   QEventLoop eventLoop;
   connect(&nam,SIGNAL(finished(QNetworkReply *)),
           &eventLoop,SLOT(quit()));
@@ -1023,7 +1027,18 @@ CheckFile(const XNATSession *curSession,
   std::string prefix = this->m_FilePrefix;
   prefix += '/';
   std::string project = curSession->GetProject();
-  prefix += toupper(project[0]);
+  //
+  // this is some specific hacky coding to get around a problem
+  // with the generated filenames.  For FMRI projects, the
+  // project name begins with fMRI, but the filename begins with
+  // FMRI. For PHD sites, they're all caps. For 'fc' the prefix
+  // is 'fc'.
+  int firstC(project[0]);
+  if(project.substr(0,2) != "fc")
+    {
+    firstC = toupper(firstC);
+    }
+  prefix += firstC;
   prefix += project.substr(1);
   prefix += '/';
   prefix += curSession->GetSubject();
@@ -1625,6 +1640,19 @@ SetImageFilename(const std::string & fname, ImageModality modality)
     }
 }
 
+void
+QBRAINSImageEvalWindow::
+sslErrorHandler(QNetworkReply *qnr, const QList<QSslError> &errList)
+{
+
+  qDebug() << "---frmBuyIt::sslErrorHandler: ";
+  // show list of all ssl errors
+  foreach (QSslError err, errList)
+    qDebug() << "ssl error: " << err;
+ 
+  qnr->ignoreSslErrors();
+
+}
 void
 QBRAINSImageEvalWindow::
 XMLFetch(QNetworkReply *reply)
