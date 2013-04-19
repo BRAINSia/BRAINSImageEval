@@ -218,6 +218,7 @@ postEvaluation()
       }
     }
 
+#if 0
   std::string toggleReviewed = this->ToggleReviewedURL(this->m_CurSession->GetProject(),
                                                        this->m_CurSession->GetSubject(),
                                                        this->m_CurSession->GetSession(),
@@ -245,7 +246,7 @@ postEvaluation()
     msgBox.exec();
     exit(1);
     }
-
+#endif
   this->m_PastEvaluations.push_back(this->m_CurEval);
   this->ResetImageEvaluators();
 }
