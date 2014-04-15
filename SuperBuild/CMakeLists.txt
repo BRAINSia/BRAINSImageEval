@@ -18,10 +18,12 @@ find_package(Qt4 COMPONENTS QtCore QtGui QtNetwork REQUIRED)
 message("QT_USE_FILE=${QT_USE_FILE}")
 include(${QT_USE_FILE})
 
+set(ITK_GIT_TAG a651d3a6d3d15546ae437a3e71edf35e3e92b4c9)
+
 ExternalProject_Add(ITK
   GIT_REPOSITORY git://itk.org/ITK.git
 #  GIT_TAG 9d020d5682cb66dce7b3245784b5bc21055b2b01
-  GIT_TAG v4.3.0
+  GIT_TAG ${ITK_GIT_TAG}
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   CMAKE_ARGS
