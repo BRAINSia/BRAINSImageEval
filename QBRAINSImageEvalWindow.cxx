@@ -289,7 +289,7 @@ QBRAINSImageEvalWindow
   m_ShowNetworkErrors(false)
 {
   this->m_HostURL = "https://www.predict-hd.net";
-  this->m_FilePrefix = "/paulsen/MRx";
+  this->m_FilePrefix = "/Shared/paulsen/MRx";
   for(unsigned i = 0; i < ModalityNum; i++)
     {
     this->m_Survey[i] = 0;
